@@ -4,18 +4,28 @@ using UnityEngine;
 
 public class PitchBend : MonoBehaviour
 {
-    public AudioSource source;
-    public float frequency = 1;
-    public float amplitude = 1;
-    float time;
+    public float pitch = 440.0f;
+    float tick;
+    public Oscillator tone;
+    public Oscillator bend;
 
     private void Start()
     {
+        tick = 1.0f / AudioSettings.outputSampleRate;
     }
 
-    void Update()
+    void OnAudioFilterRead(float[] samples, int channels)
     {
-        time += Time.fixedDeltaTime * 2f * Mathf.PI * frequency;
-        source.pitch = 1.0f + Mathf.Sin(time) * amplitude;
+        int index = 0;
+        while (index < samples.Length)
+        {
+            tone.frequency = pitch * (1.0f + bend.Sample(tick));
+            float sample = tone.Sample(tick);
+            for (int channel = 0; channel < channels; ++channel)
+            {
+                samples[index + channel] = sample;
+            }
+            index += channels;
+        }
     }
 }
